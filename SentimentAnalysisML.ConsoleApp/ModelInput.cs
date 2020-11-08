@@ -1,14 +1,15 @@
 using Microsoft.ML.Data;
+using SentimentAnalysisML.Model;
 
-namespace SentimentAnalysisML.Model
+namespace SentimentAnalysisML.ConsoleApp
 {
-    public class ModelInput
+    public class ModelInput : IModelInput
     {
-        [LoadColumn(0)]
+        [LoadColumn(1)]
         [ColumnName("Sentiment")]
         public string Sentiment { get; set; }
 
-        [LoadColumn(1)]
+        [LoadColumn(0)]
         [ColumnName("SentimentText")]
         public string SentimentText { get; set; }
     }

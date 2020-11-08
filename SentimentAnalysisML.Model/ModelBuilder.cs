@@ -19,10 +19,10 @@ namespace SentimentAnalysisML.Model
             _mlContext = new MLContext(seed: 1);
         }
         
-        public void CreateModel()
+        public void CreateModel<TModelInput>() where TModelInput : class, IModelInput
         {
             // Load Data
-            var trainingDataView = _mlContext.Data.LoadFromTextFile<ModelInput>(
+            var trainingDataView = _mlContext.Data.LoadFromTextFile<TModelInput>(
                                             path: _trainDataFilePath,
                                             hasHeader: true,
                                             separatorChar: '\t',
@@ -45,14 +45,19 @@ namespace SentimentAnalysisML.Model
         private IEstimator<ITransformer> BuildTrainingPipeline()
         {
             // Data process configuration with pipeline data transformations 
-            var dataProcessPipeline = _mlContext.Transforms.Conversion.MapValueToKey("Sentiment", "Sentiment")
-                                      .Append(_mlContext.Transforms.Text.FeaturizeText("SentimentText_tf", "SentimentText"))
-                                      .Append(_mlContext.Transforms.CopyColumns("Features", "SentimentText_tf"))
-                                      .Append(_mlContext.Transforms.NormalizeMinMax("Features", "Features"))
-                                      .AppendCacheCheckpoint(_mlContext);
+            var dataProcessPipeline = _mlContext.Transforms.Conversion
+                .MapValueToKey("Sentiment", "Sentiment")
+                .Append(_mlContext.Transforms.Text.FeaturizeText("SentimentText_tf", "SentimentText"))
+                .Append(_mlContext.Transforms.CopyColumns("Features", "SentimentText_tf"))
+                .Append(_mlContext.Transforms.NormalizeMinMax("Features", "Features"))
+                .AppendCacheCheckpoint(_mlContext);
+            
             // Set the training algorithm 
-            var trainer = _mlContext.MulticlassClassification.Trainers.OneVersusAll(_mlContext.BinaryClassification.Trainers.AveragedPerceptron(labelColumnName: "Sentiment", numberOfIterations: 10, featureColumnName: "Features"), labelColumnName: "Sentiment")
-                                      .Append(_mlContext.Transforms.Conversion.MapKeyToValue("PredictedLabel", "PredictedLabel"));
+            var trainer = _mlContext.MulticlassClassification.Trainers
+                .OneVersusAll(_mlContext.BinaryClassification.Trainers
+                    .AveragedPerceptron(labelColumnName: "Sentiment", numberOfIterations: 10, featureColumnName: "Features"), labelColumnName: "Sentiment")
+                .Append(_mlContext.Transforms.Conversion
+                    .MapKeyToValue("PredictedLabel", "PredictedLabel"));
 
             var trainingPipeline = dataProcessPipeline.Append(trainer);
 

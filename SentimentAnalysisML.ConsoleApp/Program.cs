@@ -18,10 +18,10 @@ namespace SentimentAnalysisML.ConsoleApp
             };
             
             var modelBuilder = new ModelBuilder(trainDataFilePath, modelFilePath);
-            modelBuilder.CreateModel();
+            modelBuilder.CreateModel<ModelInput>();
 
             // Make a single prediction on the sample data and print results
-            var predictionResult = new ConsumeModel(modelFilePath).Predict(sampleData);
+            var predictionResult = new ConsumeModel<ModelInput>(modelFilePath).Predict(sampleData);
 
             Console.WriteLine("Using model to make single prediction -- Comparing actual Sentiment with predicted Sentiment from sample data...\n\n");
             Console.WriteLine($"SentimentText: {sampleData.SentimentText}");

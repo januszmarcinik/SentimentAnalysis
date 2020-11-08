@@ -2,27 +2,27 @@ using Microsoft.ML;
 
 namespace SentimentAnalysisML.Model
 {
-    public class ConsumeModel
+    public class ConsumeModel<TModelInput> where TModelInput : class, IModelInput
     {
         private readonly string _modelFilePath;
-        private PredictionEngine<ModelInput, ModelOutput> _predictionEngine;
+        private PredictionEngine<TModelInput, ModelOutput> _predictionEngine;
 
         public ConsumeModel(string modelFilePath)
         {
             _modelFilePath = modelFilePath;
         }
         
-        public ModelOutput Predict(ModelInput input) => 
+        public ModelOutput Predict(TModelInput input) => 
             PredictionEngine.Predict(input);
 
-        private PredictionEngine<ModelInput, ModelOutput> PredictionEngine => 
+        private PredictionEngine<TModelInput, ModelOutput> PredictionEngine => 
             _predictionEngine ?? (_predictionEngine = CreatePredictionEngine());
 
-        private PredictionEngine<ModelInput, ModelOutput> CreatePredictionEngine()
+        private PredictionEngine<TModelInput, ModelOutput> CreatePredictionEngine()
         {
             var mlContext = new MLContext();
             var mlModel = mlContext.Model.Load(_modelFilePath, out _);
-            return mlContext.Model.CreatePredictionEngine<ModelInput, ModelOutput>(mlModel);
+            return mlContext.Model.CreatePredictionEngine<TModelInput, ModelOutput>(mlModel);
         }
     }
 }
