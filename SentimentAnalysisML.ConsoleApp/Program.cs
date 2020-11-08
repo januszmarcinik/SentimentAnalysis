@@ -6,23 +6,22 @@ namespace SentimentAnalysisML.ConsoleApp
 {
     internal class Program
     {
-        private readonly string _dataPath = Path.Combine(Environment.CurrentDirectory, "wikipedia-detox-250-line-data.tsv");
-        private static string TRAIN_DATA_FILEPATH = @"D:\Repozytoria\SentimentAnalysis\wikipedia-detox-250-line-data.tsv.txt";
-        private static string MODEL_FILEPATH = @"C:\Users\janus\AppData\Local\Temp\MLVSTools\SentimentAnalysisML\SentimentAnalysisML.Model\MLModel.zip";
-        
         private static void Main(string[] args)
         {
+            var trainDataFilePath = Path.Combine(Environment.CurrentDirectory, "Data", "train-data.txt");
+            var modelFilePath = Path.Combine(Environment.CurrentDirectory, "Data", "MLModel.zip");
+
             // Create single instance of sample data from first line of dataset for model input
             var sampleData = new ModelInput
             {
                 SentimentText = @"I love it it's perfect",
             };
             
-            var modelBuilder = new ModelBuilder(TRAIN_DATA_FILEPATH, MODEL_FILEPATH);
+            var modelBuilder = new ModelBuilder(trainDataFilePath, modelFilePath);
             modelBuilder.CreateModel();
 
             // Make a single prediction on the sample data and print results
-            var predictionResult = ConsumeModel.Predict(sampleData);
+            var predictionResult = new ConsumeModel(modelFilePath).Predict(sampleData);
 
             Console.WriteLine("Using model to make single prediction -- Comparing actual Sentiment with predicted Sentiment from sample data...\n\n");
             Console.WriteLine($"SentimentText: {sampleData.SentimentText}");

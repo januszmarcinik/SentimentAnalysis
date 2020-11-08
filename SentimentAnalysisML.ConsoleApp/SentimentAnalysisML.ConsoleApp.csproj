@@ -14,4 +14,10 @@
   <ItemGroup>
     <ProjectCapability Include="ModelBuilderGenerated" />
   </ItemGroup>
+
+  <ItemGroup>
+    <None Update="Data\train-data.txt">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+  </ItemGroup>
 </Project>
