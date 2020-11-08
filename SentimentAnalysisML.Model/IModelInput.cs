@@ -2,7 +2,7 @@
 {
     public interface IModelInput
     {
-        string Sentiment { get; set; }
+        bool Sentiment { get; set; }
 
         string SentimentText { get; set; }
     }

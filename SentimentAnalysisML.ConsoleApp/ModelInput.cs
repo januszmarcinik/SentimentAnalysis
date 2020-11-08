@@ -7,7 +7,7 @@ namespace SentimentAnalysisML.ConsoleApp
     {
         [LoadColumn(1)]
         [ColumnName("Sentiment")]
-        public string Sentiment { get; set; }
+        public bool Sentiment { get; set; }
 
         [LoadColumn(0)]
         [ColumnName("SentimentText")]

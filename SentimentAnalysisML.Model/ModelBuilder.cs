@@ -21,7 +21,6 @@ namespace SentimentAnalysisML.Model
         
         public void CreateModel<TModelInput>() where TModelInput : class, IModelInput
         {
-            // Load Data
             var trainingDataView = _mlContext.Data.LoadFromTextFile<TModelInput>(
                                             path: _trainDataFilePath,
                                             hasHeader: true,
@@ -29,22 +28,17 @@ namespace SentimentAnalysisML.Model
                                             allowQuoting: false,
                                             allowSparse: false);
 
-            // Build training pipeline
             var trainingPipeline = BuildTrainingPipeline();
 
-            // Train Model
             var mlModel = TrainModel(trainingDataView, trainingPipeline);
 
-            // Evaluate quality of Model
             Evaluate(trainingDataView, trainingPipeline);
 
-            // Save model
-            SaveModel(mlModel, _modelFilePath, trainingDataView.Schema);
+            SaveModel(mlModel, trainingDataView.Schema);
         }
 
         private IEstimator<ITransformer> BuildTrainingPipeline()
         {
-            // Data process configuration with pipeline data transformations 
             var dataProcessPipeline = _mlContext.Transforms.Conversion
                 .MapValueToKey("Sentiment", "Sentiment")
                 .Append(_mlContext.Transforms.Text.FeaturizeText("SentimentText_tf", "SentimentText"))
@@ -52,16 +46,13 @@ namespace SentimentAnalysisML.Model
                 .Append(_mlContext.Transforms.NormalizeMinMax("Features", "Features"))
                 .AppendCacheCheckpoint(_mlContext);
             
-            // Set the training algorithm 
             var trainer = _mlContext.MulticlassClassification.Trainers
                 .OneVersusAll(_mlContext.BinaryClassification.Trainers
                     .AveragedPerceptron(labelColumnName: "Sentiment", numberOfIterations: 10, featureColumnName: "Features"), labelColumnName: "Sentiment")
                 .Append(_mlContext.Transforms.Conversion
                     .MapKeyToValue("PredictedLabel", "PredictedLabel"));
 
-            var trainingPipeline = dataProcessPipeline.Append(trainer);
-
-            return trainingPipeline;
+            return dataProcessPipeline.Append(trainer);
         }
 
         private static ITransformer TrainModel(IDataView trainingDataView, IEstimator<ITransformer> trainingPipeline)
@@ -76,34 +67,18 @@ namespace SentimentAnalysisML.Model
 
         private void Evaluate(IDataView trainingDataView, IEstimator<ITransformer> trainingPipeline)
         {
-            // Cross-Validate with single dataset (since we don't have two datasets, one for training and for evaluate)
-            // in order to evaluate and get the model's accuracy metrics
             Console.WriteLine("=============== Cross-validating to get model's accuracy metrics ===============");
-            var crossValidationResults = _mlContext.MulticlassClassification.CrossValidate(trainingDataView, trainingPipeline, numberOfFolds: 5, labelColumnName: "Sentiment");
+            var crossValidationResults = _mlContext.MulticlassClassification
+                .CrossValidate(trainingDataView, trainingPipeline, numberOfFolds: 5, labelColumnName: "Sentiment");
             PrintMultiClassClassificationFoldsAverageMetrics(crossValidationResults);
         }
 
-        private void SaveModel(ITransformer mlModel, string modelRelativePath, DataViewSchema modelInputSchema)
+        private void SaveModel(ITransformer mlModel, DataViewSchema modelInputSchema)
         {
-            // Save/persist the trained model to a .ZIP file
-            Console.WriteLine($"=============== Saving the model  ===============");
+            Console.WriteLine("=============== Saving the model  ===============");
             _mlContext.Model.Save(mlModel, modelInputSchema, _modelFilePath);
             Console.WriteLine("The model is saved to {0}", _modelFilePath);
-        }
-
-        private static void PrintMultiClassClassificationMetrics(MulticlassClassificationMetrics metrics)
-        {
-            Console.WriteLine($"************************************************************");
-            Console.WriteLine($"*    Metrics for multi-class classification model   ");
-            Console.WriteLine($"*-----------------------------------------------------------");
-            Console.WriteLine($"    MacroAccuracy = {metrics.MacroAccuracy:0.####}, a value between 0 and 1, the closer to 1, the better");
-            Console.WriteLine($"    MicroAccuracy = {metrics.MicroAccuracy:0.####}, a value between 0 and 1, the closer to 1, the better");
-            Console.WriteLine($"    LogLoss = {metrics.LogLoss:0.####}, the closer to 0, the better");
-            for (var i = 0; i < metrics.PerClassLogLoss.Count; i++)
-            {
-                Console.WriteLine($"    LogLoss for class {i + 1} = {metrics.PerClassLogLoss[i]:0.####}, the closer to 0, the better");
-            }
-            Console.WriteLine($"************************************************************");
+            Console.WriteLine("=============== End of saving model ===============");
         }
 
         private static void PrintMultiClassClassificationFoldsAverageMetrics(IEnumerable<TrainCatalogBase.CrossValidationResult<MulticlassClassificationMetrics>> crossValResults)
